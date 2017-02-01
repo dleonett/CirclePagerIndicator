@@ -1,0 +1,8 @@
+<resources>
+    <declare-styleable name="CirclesIndicator">
+        <attr name="circleColorSelected" format="color" />
+        <attr name="circleColorUnselected" format="color" />
+        <attr name="circleSizeSelected" format="dimension" />
+        <attr name="circleSizeUnselected" format="dimension" />
+    </declare-styleable>
+</resources>
