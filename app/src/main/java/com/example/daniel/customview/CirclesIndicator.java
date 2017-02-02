@@ -1,5 +1,6 @@
 package com.example.daniel.customview;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.GradientDrawable;
@@ -9,6 +10,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 
 /**
@@ -23,6 +25,7 @@ public class CirclesIndicator extends LinearLayout {
     private int selectedSize;
     private int unselectedSize;
 
+    private int currentPosition;
     private ViewPager viewPager;
 
     public CirclesIndicator(Context context) {
@@ -62,6 +65,11 @@ public class CirclesIndicator extends LinearLayout {
 
     public void setViewPager(ViewPager viewPager) {
         this.viewPager = viewPager;
+
+        if (this.viewPager == null) {
+            return;
+        }
+
         this.viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -82,13 +90,19 @@ public class CirclesIndicator extends LinearLayout {
         buildCircles();
     }
 
+    public void setCurrentPosition(int position) {
+        setIndicator(position);
+    }
+
     private void buildCircles() {
         Log.d(TAG, "buildCircles()");
 
-        float scale = getResources().getDisplayMetrics().density;
-        int padding = (int) (2 * scale + 0.5f);
+        removeAllViews();
 
-        for (int i = 0; i < viewPager.getAdapter().getCount(); i++) {
+        int padding = DensityUtils.dpToPx(3);
+        int circlesCount = viewPager.getAdapter().getCount();
+
+        for (int i = 0; i < circlesCount; i++) {
             View circle = new View(getContext());
 
             circle.setBackgroundResource(R.drawable.circle);
@@ -102,32 +116,75 @@ public class CirclesIndicator extends LinearLayout {
             addView(circle);
         }
 
+        setMinimumHeight(selectedSize);
+
         setIndicator(0);
     }
 
-    private void setIndicator(int index) {
+    private void setIndicator(int newPosition) {
         Log.d(TAG, "setIndicator()");
 
-        if (index < viewPager.getAdapter().getCount()) {
-            for (int i = 0; i < viewPager.getAdapter().getCount(); i++) {
-                View circle = getChildAt(i);
-                int size;
+        if (viewPager == null) {
+            return;
+        }
 
-                if (i == index) {
+        if (newPosition < viewPager.getAdapter().getCount()) {
+            for (int i = 0; i < viewPager.getAdapter().getCount(); i++) {
+                final View circle = getChildAt(i);
+                final int size;
+
+                if (i == newPosition) {
                     ((GradientDrawable) circle.getBackground()).setColor(selectedColor);
-                    size = selectedSize;
+                    ValueAnimator animator = ValueAnimator.ofInt(unselectedSize, selectedSize);
+                    animator.setDuration(200);
+                    animator.setInterpolator(new DecelerateInterpolator());
+                    animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                        public void onAnimationUpdate(ValueAnimator animation) {
+                            int newRadius = (int) animation.getAnimatedValue();
+
+                            LayoutParams params = (LayoutParams) circle.getLayoutParams();
+
+                            params.width = newRadius;
+                            params.height = newRadius;
+
+                            circle.setLayoutParams(params);
+                        }
+                    });
+                    animator.start();
                 } else {
                     ((GradientDrawable) circle.getBackground()).setColor(unselectedColor);
-                    size = unselectedSize;
+
+                    if (i == currentPosition) {
+                        ValueAnimator animator = ValueAnimator.ofInt(selectedSize, unselectedSize);
+                        animator.setDuration(200);
+                        animator.setInterpolator(new DecelerateInterpolator());
+                        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                            public void onAnimationUpdate(ValueAnimator animation) {
+                                int newRadius = (int) animation.getAnimatedValue();
+
+                                LayoutParams params = (LayoutParams) circle.getLayoutParams();
+
+                                params.width = newRadius;
+                                params.height = newRadius;
+
+                                circle.setLayoutParams(params);
+                            }
+                        });
+                        animator.start();
+                    } else {
+                        size = unselectedSize;
+
+                        LayoutParams params = (LayoutParams) circle.getLayoutParams();
+
+                        params.width = size;
+                        params.height = size;
+
+                        circle.setLayoutParams(params);
+                    }
                 }
-
-                LayoutParams params = (LayoutParams) circle.getLayoutParams();
-
-                params.width = size;
-                params.height = size;
-
-                circle.setLayoutParams(params);
             }
         }
+
+        currentPosition = newPosition;
     }
 }
