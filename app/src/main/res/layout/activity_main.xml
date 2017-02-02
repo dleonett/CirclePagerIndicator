@@ -19,9 +19,9 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="24dp"
-        app:selectedColor="@color/colorAccent"
-        app:selectedSize="@dimen/circle_indicator_selected"
-        app:unselectedColor="@color/colorPrimary"
-        app:unselectedSize="@dimen/circle_indicator_unselected" />
+        app:circleColorSelected="@color/colorAccent"
+        app:circleColorUnselected="@color/colorPrimary"
+        app:circleSizeSelected="@dimen/circle_indicator_selected"
+        app:circleSizeUnselected="@dimen/circle_indicator_unselected" />
 
 </RelativeLayout>
